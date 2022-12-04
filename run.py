@@ -78,7 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', type=int, default=4, help='The number of channels')
     parser.add_argument('-s', type=int, default=1000, help='Sequence length')
     parser.add_argument('-i', type=int, default=50, help='The number of interval')
-    parser.add_argument('-t', type=float, default=0.1, help='Time out (s)')
+    parser.add_argument('-t', type=float, default=0.5, help='Time out (s)')
     args = parser.parse_args()
 
     # setup network
