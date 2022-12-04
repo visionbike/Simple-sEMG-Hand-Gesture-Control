@@ -39,14 +39,13 @@ class Serial:
             self.serial.close()
 
     def serial_send(self):
-        time.sleep(self.timeout)
-        # while True:
-        self.serial.write(self.cmd.encode('utf-8'))
+        # time.sleep(self.timeout)
+        while True:
+            self.serial.write(self.cmd.encode('utf-8'))
 
     def serial_read(self):
         print('Receiving signal...')
-        values = []
-        signal = '0'
+        cmd = '0'
         while True:
             string = self.serial.readline().decode('utf-8').rstrip()  # read and decode a byte string
             vals = [float(v) for v in string.split(' ')]
@@ -65,10 +64,13 @@ class Serial:
                 score = torch.softmax(out, dim=1)
                 prob = score.data.max(dim=1)[0]  # get the max probability
                 idx = score.data.max(dim=1)[1].cpu().numpy()[0]
+                if prob < 0.5:
+                    self.cmd = cmd
                 if prob > 0.5:
                     # send current predicted action if the confident > 0.5
-                    self.cmd = str(idx)
-                # time.sleep(self.timeout)
+                    cmd = str(idx)
+                    self.cmd = cmd
+                time.sleep(self.timeout)
 
 
 if __name__ == '__main__':
