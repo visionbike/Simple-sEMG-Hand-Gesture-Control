@@ -47,11 +47,12 @@ class Serial:
         print('Receiving signal...')
         cmd = '0'
         while True:
-            string = self.serial.readline().decode('utf-8').rstrip()  # read and decode a byte string
-            vals = [float(v) for v in string.split(' ')]
-            self.buffer.extend(vals)    # add value into buffer first
-            if len(self.buffer) == self.buffer.maxlen:
-                self.window.extend(self.buffer)     # add buffer to window
+            for _ in range(self.interval):
+                string = self.serial.readline().decode('utf-8').rstrip()  # read and decode a byte string
+                vals = [float(v) for v in string.split(' ')]
+                self.buffer.extend(vals)    # add value into buffer first
+            # if len(self.buffer) == self.buffer.maxlen:
+            self.window.extend(self.buffer)     # add buffer to window
             if len(self.window) == self.window.maxlen:
                 # start prediction
                 # convert 1D sequence to 2D signal in shape of (n_channel, n_len)
@@ -64,12 +65,9 @@ class Serial:
                 score = torch.softmax(out, dim=1)
                 prob = score.data.max(dim=1)[0]  # get the max probability
                 idx = score.data.max(dim=1)[1].cpu().numpy()[0]
-                if prob < 0.5:
-                    self.cmd = cmd
-                if prob > 0.5:
-                    # send current predicted action if the confident > 0.5
-                    cmd = str(idx)
-                    self.cmd = cmd
+                if prob >= 0.5:
+                    # send current predicted action if the confident >= 0.5
+                    self.cmd = str(idx)
                 time.sleep(self.timeout)
 
 
@@ -80,7 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', type=int, default=4, help='The number of channels')
     parser.add_argument('-s', type=int, default=1000, help='Sequence length')
     parser.add_argument('-i', type=int, default=50, help='The number of interval')
-    parser.add_argument('-t', type=float, default=0.5, help='Time out (s)')
+    parser.add_argument('-t', type=float, default=0.1, help='Time out (s)')
     args = parser.parse_args()
 
     # setup network
